@@ -4,6 +4,7 @@ const Login = () => import('../views/Login.vue')
 const Dashboard = () => import('../views/Dashboard.vue')
 const DocsList = () => import('../views/DocsList.vue')
 const DocReader = () => import('../views/DocReader.vue')
+const Datasets = () => import('../views/Datasets.vue')
 const Glossary = () => import('../views/Glossary.vue')
 const Favorites = () => import('../views/Favorites.vue')
 const Settings = () => import('../views/Settings.vue')
@@ -13,6 +14,7 @@ const routes = [
   { path: '/', name: 'Dashboard', component: Dashboard },
   { path: '/docs', name: 'DocsList', component: DocsList },
   { path: '/docs/:id/read', name: 'DocReader', component: DocReader, props: true },
+  { path: '/datasets', name: 'Datasets', component: Datasets },
   { path: '/glossary', name: 'Glossary', component: Glossary },
   { path: '/favorites', name: 'Favorites', component: Favorites },
   { path: '/settings', name: 'Settings', component: Settings },

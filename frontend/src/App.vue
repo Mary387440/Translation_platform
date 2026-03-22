@@ -8,6 +8,9 @@
         <el-menu-item index="/docs">
           <span>文档库</span>
         </el-menu-item>
+        <el-menu-item index="/datasets">
+          <span>数据集</span>
+        </el-menu-item>
         <el-menu-item index="/glossary">
           <span>术语库</span>
         </el-menu-item>

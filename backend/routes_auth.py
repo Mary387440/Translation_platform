@@ -62,7 +62,7 @@ def login():
 @bp.get("/me")
 @jwt_required()
 def me():
-    user_id = get_jwt_identity()
+    user_id = int(get_jwt_identity())
     user = User.query.get(user_id)
     if not user:
         return jsonify({"message": "用户不存在"}), 404
