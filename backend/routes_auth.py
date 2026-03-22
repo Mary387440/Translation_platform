@@ -77,3 +77,21 @@ def me():
         }
     )
 
+
+@bp.put("/profile")
+@jwt_required()
+def update_profile():
+    user_id = int(get_jwt_identity())
+    user = User.query.get(user_id)
+    if not user:
+        return jsonify({"message": "用户不存在"}), 404
+    data = request.get_json() or {}
+    if "nickname" in data:
+        user.nickname = (data.get("nickname") or "").strip() or user.nickname
+    if "preferred_src_lang" in data:
+        user.preferred_src_lang = (data.get("preferred_src_lang") or "").strip()[:10] or None
+    if "preferred_tgt_lang" in data:
+        user.preferred_tgt_lang = (data.get("preferred_tgt_lang") or "").strip()[:10] or None
+    db.session.commit()
+    return jsonify({"message": "已更新"})
+

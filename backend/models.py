@@ -139,3 +139,83 @@ class AIUsageLog(db.Model):
     output_tokens = db.Column(db.Integer)
     created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
 
+
+class LiteraryWork(db.Model):
+    """网络文学书目（出海书库）。"""
+
+    __tablename__ = "literary_works"
+
+    id = db.Column(db.BigInteger, primary_key=True, autoincrement=True)
+    user_id = db.Column(db.BigInteger, db.ForeignKey("users.id"), nullable=False)
+    title = db.Column(db.String(255), nullable=False)
+    author_name = db.Column(db.String(128))
+    # 玄幻/仙侠/都市/科幻/言情/历史/其他
+    genre = db.Column(db.String(32), default="其他")
+    src_lang = db.Column(db.String(10), default="zh")
+    summary = db.Column(db.Text)
+    # draft | published
+    status = db.Column(db.String(20), default="draft")
+    created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+    updated_at = db.Column(
+        db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False
+    )
+
+
+class Chapter(db.Model):
+    __tablename__ = "chapters"
+
+    id = db.Column(db.BigInteger, primary_key=True, autoincrement=True)
+    work_id = db.Column(db.BigInteger, db.ForeignKey("literary_works.id"), nullable=False)
+    title = db.Column(db.String(255))
+    chapter_index = db.Column(db.Integer, nullable=False, default=1)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+
+
+class ChapterSegment(db.Model):
+    """章节内分句/分段，用于对照阅读与翻译。"""
+
+    __tablename__ = "chapter_segments"
+
+    id = db.Column(db.BigInteger, primary_key=True, autoincrement=True)
+    chapter_id = db.Column(db.BigInteger, db.ForeignKey("chapters.id"), nullable=False)
+    index_in_chapter = db.Column(db.Integer, nullable=False)
+    content = db.Column(db.Text, nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+
+
+class WorkTranslation(db.Model):
+    """句段级译文（AI 预译 + 可人工润色）。"""
+
+    __tablename__ = "work_translations"
+
+    id = db.Column(db.BigInteger, primary_key=True, autoincrement=True)
+    chapter_segment_id = db.Column(
+        db.BigInteger, db.ForeignKey("chapter_segments.id"), nullable=False
+    )
+    user_id = db.Column(db.BigInteger, db.ForeignKey("users.id"), nullable=False)
+    target_lang = db.Column(db.String(10), nullable=False)
+    engine = db.Column(db.String(50))
+    translated_text = db.Column(db.Text, nullable=False)
+    # ai_draft | human_polished
+    status = db.Column(db.String(20), default="ai_draft")
+    is_selected = db.Column(db.Boolean, default=True)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+    updated_at = db.Column(
+        db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False
+    )
+
+
+class ReaderFeedback(db.Model):
+    """读者反馈（用于迭代翻译质量）。"""
+
+    __tablename__ = "reader_feedback"
+
+    id = db.Column(db.BigInteger, primary_key=True, autoincrement=True)
+    user_id = db.Column(db.BigInteger, db.ForeignKey("users.id"), nullable=False)
+    work_translation_id = db.Column(
+        db.BigInteger, db.ForeignKey("work_translations.id"), nullable=False
+    )
+    rating = db.Column(db.Integer)  # 1-5
+    comment = db.Column(db.String(1024))
+    created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+

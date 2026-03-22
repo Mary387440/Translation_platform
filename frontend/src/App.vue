@@ -5,8 +5,14 @@
         <el-menu-item index="/">
           <span>控制台</span>
         </el-menu-item>
+        <el-menu-item index="/works">
+          <span>书库</span>
+        </el-menu-item>
         <el-menu-item index="/docs">
           <span>文档库</span>
+        </el-menu-item>
+        <el-menu-item index="/ocr">
+          <span>场景 OCR</span>
         </el-menu-item>
         <el-menu-item index="/datasets">
           <span>数据集</span>
@@ -25,8 +31,8 @@
     <el-container>
       <el-header height="56px">
         <div class="app-title">
-          <span>小语种翻译阅读平台</span>
-          <span class="app-subtitle">SailoAI</span>
+          <span>SailoAI 文学出海</span>
+          <span class="app-subtitle">多语种智能翻译阅读</span>
         </div>
         <div class="app-header-right">
           <el-select size="small" placeholder="界面语言" style="width: 120px">

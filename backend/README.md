@@ -23,6 +23,9 @@ pip install -r requirements.txt
 ```bash
 set DATABASE_URL=mysql+pymysql://user:password@localhost:3306/translation_platform
 set JWT_SECRET_KEY=your-secret
+
+# 可选：真实大模型翻译（见 .env.example）
+set DEEPSEEK_API_KEY=sk-...
 ```
 
 4. 同步数据库表结构（推荐 Flask-Migrate）
@@ -34,7 +37,7 @@ flask db migrate -m "init"
 flask db upgrade
 ```
 
-若库中已有旧表、新增列失败，请自行执行 `ALTER TABLE` 为 `docs`、`glossary_entries` 增加 `dataset_id`，并新建表 `datasets`、`parallel_pairs`（字段与 `models.py` 保持一致）。
+若库中已有旧表、新增列失败，请自行执行迁移或按 `models.py` 新建/更新表，包括但不限于：`datasets`、`parallel_pairs`、`literary_works`、`chapters`、`chapter_segments`、`work_translations`、`reader_feedback` 等。
 
 5. 启动服务
 
@@ -44,12 +47,16 @@ python app.py
 flask run
 ```
 
-## 主要 API
+## 主要 API（对齐 SailoAI 计划书能力）
 
 - `GET /api/health` — 健康检查  
-- `POST /api/auth/register` / `POST /api/auth/login` / `GET /api/auth/me` — 用户与 JWT  
-- `GET|POST /api/datasets` — 数据集元数据  
-- `POST /api/datasets/<id>/import/terminology|parallel|documents` — 三种导入  
+- `POST /api/auth/register` / `POST /api/auth/login` / `GET /api/auth/me` / `PUT /api/auth/profile` — 用户与偏好语种  
+- `GET /api/dashboard/summary` — 控制台汇总  
+- **书库与翻译**：`GET|POST /api/works`，`GET /api/works/<id>/chapters`，`POST /api/works/<id>/chapters`，`GET .../segments?target_lang=`，`POST /api/works/segments/<id>/translate`（DeepSeek + RAG），`PUT /api/works/translations/<id>/polish`，`POST .../feedback`  
+- `POST /api/works/<id>/seed-demo` — 写入示例章节（体验用）  
+- `GET|POST /api/datasets` — 数据集；三种导入见 **`DATASETS.md`**  
+- `GET /api/glossary/entries` — 术语列表（RAG 用词）  
+- `POST /api/ocr/scan` — 场景图 OCR 占位（可接 PaddleOCR）  
 
 导入格式详见 **`DATASETS.md`**。上传文件保存在 `backend/uploads/`（已加入 `.gitignore`）。
 

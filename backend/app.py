@@ -31,12 +31,20 @@ def create_app():
     migrate.init_app(app, db)
     jwt.init_app(app)
 
-    from models import Dataset, User  # noqa: F401
+    from models import Dataset, LiteraryWork, User  # noqa: F401
     from routes_auth import bp as auth_bp
+    from routes_dashboard import bp as dashboard_bp
     from routes_datasets import bp as datasets_bp
+    from routes_glossary_api import bp as glossary_api_bp
+    from routes_ocr import bp as ocr_bp
+    from routes_works import bp as works_bp
 
     app.register_blueprint(auth_bp)
+    app.register_blueprint(dashboard_bp)
     app.register_blueprint(datasets_bp)
+    app.register_blueprint(glossary_api_bp)
+    app.register_blueprint(ocr_bp)
+    app.register_blueprint(works_bp)
 
     @app.get("/api/health")
     def health():

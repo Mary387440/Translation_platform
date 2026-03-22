@@ -1,9 +1,17 @@
 <template>
   <div class="page">
+    <el-alert
+      title="网络文学对照阅读与 AI 翻译请使用「书库」"
+      type="info"
+      show-icon
+      style="margin-bottom: 16px"
+    >
+      <router-link to="/works">前往书库</router-link>
+    </el-alert>
     <div class="page-header">
       <div>
         <h1 class="page-title">文档阅读器</h1>
-        <p class="page-subtitle">左侧原文，右侧译文与辅助信息。</p>
+        <p class="page-subtitle">用于上传的原始文档；书库作品请从侧栏「书库」进入。</p>
       </div>
       <div class="page-actions">
         <el-select size="small" placeholder="目标语种" style="width: 140px">

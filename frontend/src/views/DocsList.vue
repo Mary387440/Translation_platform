@@ -3,7 +3,7 @@
     <div class="page-header">
       <div>
         <h1 class="page-title">文档库</h1>
-        <p class="page-subtitle">管理和搜索你上传的小语种文档。</p>
+        <p class="page-subtitle">上传的原始文件（ZIP/单文件）；文学类作品请在「书库」中管理。</p>
       </div>
       <div class="page-actions">
         <el-button type="primary">上传文档</el-button>
