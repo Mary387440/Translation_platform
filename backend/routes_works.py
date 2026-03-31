@@ -2,7 +2,9 @@
 from datetime import datetime
 
 from flask import Blueprint, jsonify, request
-from flask_jwt_extended import get_jwt_identity, jwt_required
+from flask_jwt_extended import get_jwt_identity
+
+from authz import admin_required
 from sqlalchemy import func
 
 from app import db
@@ -34,7 +36,7 @@ def _log_ai(user_id, action, engine):
 
 
 @bp.get("")
-@jwt_required()
+@admin_required
 def list_works():
     user_id = _uid()
     genre = request.args.get("genre")
@@ -69,7 +71,7 @@ def list_works():
 
 
 @bp.post("")
-@jwt_required()
+@admin_required
 def create_work():
     user_id = _uid()
     data = request.get_json() or {}
@@ -91,7 +93,7 @@ def create_work():
 
 
 @bp.get("/<int:work_id>")
-@jwt_required()
+@admin_required
 def get_work(work_id):
     user_id = _uid()
     w = LiteraryWork.query.filter_by(id=work_id, user_id=user_id).first()
@@ -113,7 +115,7 @@ def get_work(work_id):
 
 
 @bp.get("/<int:work_id>/chapters")
-@jwt_required()
+@admin_required
 def list_chapters(work_id):
     user_id = _uid()
     w = LiteraryWork.query.filter_by(id=work_id, user_id=user_id).first()
@@ -131,7 +133,7 @@ def list_chapters(work_id):
 
 
 @bp.post("/<int:work_id>/chapters")
-@jwt_required()
+@admin_required
 def add_chapter(work_id):
     user_id = _uid()
     w = LiteraryWork.query.filter_by(id=work_id, user_id=user_id).first()
@@ -165,7 +167,7 @@ def add_chapter(work_id):
 
 
 @bp.get("/<int:work_id>/chapters/<int:chapter_id>/segments")
-@jwt_required()
+@admin_required
 def list_segments(work_id, chapter_id):
     user_id = _uid()
     w = LiteraryWork.query.filter_by(id=work_id, user_id=user_id).first()
@@ -210,7 +212,7 @@ def list_segments(work_id, chapter_id):
 
 
 @bp.post("/segments/<int:segment_id>/translate")
-@jwt_required()
+@admin_required
 def translate_segment(segment_id):
     user_id = _uid()
     data = request.get_json() or {}
@@ -244,18 +246,25 @@ def translate_segment(segment_id):
     db.session.add(wt)
     _log_ai(user_id, "translate_segment", engine)
     db.session.commit()
+    # 为前端展示翻译依据：术语命中 + 平行句参考（避免超长，这里做截断）
     return jsonify(
         {
             "translation_id": wt.id,
             "translated_text": out_text,
             "engine": engine,
             "status": wt.status,
+            "rag": {
+                "glossary_block": (g_lines or "")[:4000],
+                "parallel_block": (p_lines or "")[:4000],
+            }
+            if use_rag
+            else {"glossary_block": "", "parallel_block": ""},
         }
     )
 
 
 @bp.put("/translations/<int:tid>/polish")
-@jwt_required()
+@admin_required
 def polish_translation(tid):
     user_id = _uid()
     data = request.get_json() or {}
@@ -272,7 +281,7 @@ def polish_translation(tid):
 
 
 @bp.post("/translations/<int:tid>/feedback")
-@jwt_required()
+@admin_required
 def feedback(tid):
     user_id = _uid()
     data = request.get_json() or {}
@@ -294,7 +303,7 @@ def feedback(tid):
 
 
 @bp.post("/<int:work_id>/seed-demo")
-@jwt_required()
+@admin_required
 def seed_demo(work_id):
     """为指定作品写入示例章节（若无章节）。"""
     user_id = _uid()
@@ -317,3 +326,137 @@ def seed_demo(work_id):
     w.updated_at = datetime.utcnow()
     db.session.commit()
     return jsonify({"chapter_id": ch.id, "message": "已写入示例章节"})
+
+
+@bp.post("/seed-classics")
+@admin_required
+def seed_classics():
+    """
+    为当前管理员账号创建一批“经典文学可阅读示例”（短摘录）。
+    返回创建出来的作品列表，用于读者端书架展示。
+    """
+    user_id = _uid()
+    data = request.get_json() or {}
+    count = int(data.get("count") or 4)
+    if count < 1:
+        count = 1
+    if count > 6:
+        count = 6
+
+    classics = [
+        {
+            "title": "《论语》·学而篇（节选）",
+            "author_name": "孔子及弟子",
+            "genre": "历史",
+            "summary": "孔子语录短句节选，可直接用于对照阅读与翻译。",
+            "chapter_title": "第一章 学而",
+            "src_lang": "zh",
+            "paras": [
+                "子曰：学而时习之，不亦说乎？",
+                "有朋自远方来，不亦乐乎？",
+                "人不知而不愠，不亦君子乎？",
+                "为政以德，譬如北辰，居其所而众星共之。",
+            ],
+        },
+        {
+            "title": "《孟子》·梁惠王上（节选）",
+            "author_name": "孟子",
+            "genre": "历史",
+            "summary": "关于仁政与民心的对话节选，适合句段翻译体验。",
+            "chapter_title": "第一章 梁惠王上",
+            "src_lang": "zh",
+            "paras": [
+                "梁惠王曰：寡人之于国也，尽心焉耳矣。",
+                "河内凶，则移其民于河东；河东凶，亦然。",
+                "民之为道也，有恒产者有恒心，无恒产者无恒心。",
+            ],
+        },
+        {
+            "title": "《道德经》·第一章（节选）",
+            "author_name": "老子",
+            "genre": "其他",
+            "summary": "道与德的开篇短句，适合作为翻译与 RAG 对照。",
+            "chapter_title": "第一章 道可道",
+            "src_lang": "zh",
+            "paras": [
+                "道可道，非常道；名可名，非常名。",
+                "无名天地之始；有名万物之母。",
+                "故常无欲，以观其妙；常有欲，以观其徼。",
+            ],
+        },
+        {
+            "title": "《庄子》·逍遥游（节选）",
+            "author_name": "庄子",
+            "genre": "其他",
+            "summary": "关于逍遥与志趣的寓言节选，供读者进行 AI 翻译体验。",
+            "chapter_title": "第一章 逍遥游",
+            "src_lang": "zh",
+            "paras": [
+                "北冥有鱼，其名为鲲；鲲之大，不知其几千里也。",
+                "化而为鸟，其名为鹏；鹏之背，不知其几千里也。",
+                "怒而飞，其翼若垂天之云。",
+            ],
+        },
+        {
+            "title": "《红楼梦》·开篇（节选）",
+            "author_name": "曹雪芹",
+            "genre": "言情",
+            "summary": "小说开篇叙述节选，用于展示完整阅读流程。",
+            "chapter_title": "第一章 甫一开卷",
+            "src_lang": "zh",
+            "paras": [
+                "甫一开卷，便知是人间富贵，未必尽如尘世。",
+                "假作真时真亦假，无为有处有还无。",
+                "好一似食尽鸟投林，落了片白茫茫大地真干净！",
+            ],
+        },
+        {
+            "title": "《史记》·太史公自序（节选）",
+            "author_name": "司马迁",
+            "genre": "历史",
+            "summary": "史论与叙述的短句节选，用于对照翻译。",
+            "chapter_title": "第一章 自序",
+            "src_lang": "zh",
+            "paras": [
+                "究天人之际，通古今之变，成一家之言。",
+                "亦欲论列其世，明其所以然。",
+                "发愤著书，述往思来。",
+            ],
+        },
+    ]
+
+    created = []
+    for item in classics[:count]:
+        w = LiteraryWork(
+            user_id=user_id,
+            title=item["title"],
+            author_name=item.get("author_name"),
+            genre=item.get("genre", "其他")[:32],
+            src_lang=(item.get("src_lang") or "zh")[:10],
+            summary=item.get("summary"),
+            status="published",
+        )
+        db.session.add(w)
+        db.session.flush()
+
+        ch = Chapter(
+            work_id=w.id,
+            title=item.get("chapter_title") or "第一章",
+            chapter_index=1,
+        )
+        db.session.add(ch)
+        db.session.flush()
+
+        for idx, content in enumerate([p.strip() for p in item["paras"] if (p or "").strip()]):
+            db.session.add(
+                ChapterSegment(
+                    chapter_id=ch.id,
+                    index_in_chapter=idx,
+                    content=content,
+                )
+            )
+
+        created.append({"work_id": w.id, "title": w.title})
+
+    db.session.commit()
+    return jsonify({"message": "已创建经典作品", "created": created})

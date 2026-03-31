@@ -1,6 +1,8 @@
 """术语库列表与检索（阅读/翻译时调用）。"""
 from flask import Blueprint, jsonify, request
-from flask_jwt_extended import get_jwt_identity, jwt_required
+from flask_jwt_extended import get_jwt_identity
+
+from authz import admin_required
 
 from models import GlossaryEntry
 
@@ -12,7 +14,7 @@ def _uid():
 
 
 @bp.get("/entries")
-@jwt_required()
+@admin_required
 def list_entries():
     user_id = _uid()
     q = (request.args.get("q") or "").strip()

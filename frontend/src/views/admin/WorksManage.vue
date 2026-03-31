@@ -2,14 +2,13 @@
   <div class="page">
     <div class="page-header">
       <div>
-        <h1 class="page-title">书库 · 文学出海</h1>
-        <p class="page-subtitle">
-          管理网络文学作品与章节；对照阅读与 AI 翻译（DeepSeek + RAG）在阅读器中完成。
-        </p>
+        <h1 class="page-title">书稿与章节</h1>
+        <p class="page-subtitle">创建作品、导入章节；发布后对读者可见。翻译润色在预览中完成。</p>
       </div>
       <div class="page-actions">
         <el-button type="primary" @click="openCreate">新建作品</el-button>
-        <el-button @click="runDemo">一键体验示例</el-button>
+        <el-button @click="runDemo">一键示例</el-button>
+        <el-button @click="runClassics">一键经典</el-button>
       </div>
     </div>
 
@@ -40,14 +39,14 @@
             <el-tag size="small">{{ w.genre }}</el-tag>
           </div>
         </template>
-        <p class="meta">{{ w.author_name || '佚名' }} · {{ w.src_lang }}</p>
+        <p class="meta">{{ w.author_name || '佚名' }} · {{ w.src_lang }} · {{ w.status }}</p>
         <p class="summary">{{ w.summary || '暂无简介' }}</p>
         <div class="card-actions">
-          <el-button type="primary" link @click="goRead(w)">阅读</el-button>
+          <el-button type="primary" link @click="goRead(w)">预览 / 润色</el-button>
         </div>
       </el-card>
     </div>
-    <el-empty v-if="!loading && items.length === 0" description="暂无作品，点击「一键体验示例」或新建" />
+    <el-empty v-if="!loading && items.length === 0" description="暂无作品，请新建或导入示例" />
 
     <el-dialog v-model="createVisible" title="新建作品" width="480px">
       <el-form label-position="top">
@@ -78,7 +77,7 @@
 import { onMounted, reactive, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
-import { api } from '../stores/auth'
+import { api } from '../../stores/auth'
 
 const router = useRouter()
 const items = ref([])
@@ -141,7 +140,7 @@ const submitCreate = async () => {
     const first = ch.items?.[0]
     if (first) {
       router.push({
-        name: 'WorkReader',
+        name: 'AdminWorkReader',
         params: { workId: String(data.id), chapterId: String(first.id) },
       })
     }
@@ -167,7 +166,30 @@ const runDemo = async () => {
     const { data: ch } = await api.get(`/api/works/${w.id}/chapters`)
     const first = ch.items?.[0]
     if (first) {
-      router.push({ name: 'WorkReader', params: { workId: String(w.id), chapterId: String(first.id) } })
+      router.push({
+        name: 'AdminWorkReader',
+        params: { workId: String(w.id), chapterId: String(first.id) },
+      })
+    }
+  } catch (e) {
+    ElMessage.error(e?.response?.data?.message || '失败')
+  }
+}
+
+const runClassics = async () => {
+  try {
+    const { data } = await api.post('/api/works/seed-classics', { count: 4 })
+    const first = data?.created?.[0]
+    ElMessage.success('已生成经典作品')
+    await load()
+    if (!first?.work_id) return
+    const { data: ch } = await api.get(`/api/works/${first.work_id}/chapters`)
+    const firstCh = ch.items?.[0]
+    if (firstCh) {
+      router.push({
+        name: 'AdminWorkReader',
+        params: { workId: String(first.work_id), chapterId: String(firstCh.id) },
+      })
     }
   } catch (e) {
     ElMessage.error(e?.response?.data?.message || '失败')
@@ -179,12 +201,15 @@ const goRead = async (w) => {
     const { data } = await api.get(`/api/works/${w.id}/chapters`)
     const first = data.items?.[0]
     if (!first) {
-      ElMessage.info('请先为该作品添加章节（编辑页后续可扩展）')
+      ElMessage.info('请先添加章节')
       return
     }
-    router.push({ name: 'WorkReader', params: { workId: String(w.id), chapterId: String(first.id) } })
+    router.push({
+      name: 'AdminWorkReader',
+      params: { workId: String(w.id), chapterId: String(first.id) },
+    })
   } catch (e) {
-    ElMessage.error(e?.response?.data?.message || '无法进入阅读')
+    ElMessage.error(e?.response?.data?.message || '无法进入')
   }
 }
 </script>

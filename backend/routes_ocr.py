@@ -3,7 +3,9 @@ import os
 import uuid
 
 from flask import Blueprint, current_app, jsonify, request
-from flask_jwt_extended import get_jwt_identity, jwt_required
+from flask_jwt_extended import get_jwt_identity
+
+from authz import admin_required
 from werkzeug.utils import secure_filename
 
 bp = Blueprint("ocr", __name__, url_prefix="/api/ocr")
@@ -14,7 +16,7 @@ def _uid():
 
 
 @bp.post("/scan")
-@jwt_required()
+@admin_required
 def scan_image():
     """
     上传图片，返回识别文本 + 模拟译文。

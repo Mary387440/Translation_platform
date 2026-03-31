@@ -1,3 +1,5 @@
+import sys
+
 from flask import Flask
 from flask_cors import CORS
 from flask_sqlalchemy import SQLAlchemy
@@ -8,6 +10,11 @@ import os
 db = SQLAlchemy()
 migrate = Migrate()
 jwt = JWTManager()
+
+# 兼容直接 `python app.py` 启动时的导入路径：
+# 让 `from app import ...` 指向当前模块，避免二次导入触发循环依赖。
+if __name__ == "__main__":
+    sys.modules["app"] = sys.modules[__name__]
 
 
 def create_app():
@@ -31,20 +38,33 @@ def create_app():
     migrate.init_app(app, db)
     jwt.init_app(app)
 
-    from models import Dataset, LiteraryWork, User  # noqa: F401
+    from models import (
+        Dataset,
+        DiscussionComment,
+        DiscussionPost,
+        EvaluationTask,
+        LiteraryWork,
+        User,
+    )  # noqa: F401
     from routes_auth import bp as auth_bp
+    from routes_catalog import bp as catalog_bp
     from routes_dashboard import bp as dashboard_bp
     from routes_datasets import bp as datasets_bp
+    from routes_eval import bp as eval_bp
     from routes_glossary_api import bp as glossary_api_bp
     from routes_ocr import bp as ocr_bp
     from routes_works import bp as works_bp
+    from routes_discussion import bp as discussion_bp
 
     app.register_blueprint(auth_bp)
+    app.register_blueprint(catalog_bp)
     app.register_blueprint(dashboard_bp)
     app.register_blueprint(datasets_bp)
+    app.register_blueprint(eval_bp)
     app.register_blueprint(glossary_api_bp)
     app.register_blueprint(ocr_bp)
     app.register_blueprint(works_bp)
+    app.register_blueprint(discussion_bp)
 
     @app.get("/api/health")
     def health():

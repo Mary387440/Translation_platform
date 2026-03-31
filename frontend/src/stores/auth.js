@@ -13,10 +13,19 @@ api.interceptors.request.use((config) => {
   return config
 })
 
+function loadUser() {
+  try {
+    const raw = localStorage.getItem('user')
+    return raw ? JSON.parse(raw) : null
+  } catch {
+    return null
+  }
+}
+
 export const useAuthStore = defineStore('auth', {
   state: () => ({
     token: localStorage.getItem('token') || '',
-    user: null,
+    user: loadUser(),
   }),
   actions: {
     async login(email, password) {
@@ -24,12 +33,18 @@ export const useAuthStore = defineStore('auth', {
       this.token = res.data.access_token
       this.user = res.data.user
       localStorage.setItem('token', this.token)
+      localStorage.setItem('user', JSON.stringify(this.user))
     },
     logout() {
       this.token = ''
       this.user = null
       localStorage.removeItem('token')
+      localStorage.removeItem('user')
+    },
+    async fetchMe() {
+      const { data } = await api.get('/api/auth/me')
+      this.user = data
+      localStorage.setItem('user', JSON.stringify(data))
     },
   },
 })
-

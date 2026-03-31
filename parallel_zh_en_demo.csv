@@ -1,0 +1,11 @@
+src_lang,tgt_lang,src_text,tgt_text
+zh,en,你好，世界。,Hello, world.
+zh,en,今天天气很好。,The weather is great today.
+zh,en,请稍等一下。,Please wait a moment.
+zh,en,我喜欢阅读中国小说。,I like reading Chinese novels.
+zh,en,这段文字用于翻译评测。,This text is used for translation evaluation.
+zh,en,系统正在处理中。,The system is processing.
+zh,en,欢迎使用多语种翻译平台。,Welcome to the multilingual translation platform.
+zh,en,我们需要更多平行语料。,We need more parallel corpus data.
+zh,en,这个功能已经上线。,This feature is now live.
+zh,en,谢谢你的反馈。,Thank you for your feedback.

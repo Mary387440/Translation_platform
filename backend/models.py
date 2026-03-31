@@ -9,6 +9,8 @@ class User(db.Model):
     id = db.Column(db.BigInteger, primary_key=True, autoincrement=True)
     email = db.Column(db.String(255), unique=True, nullable=False)
     password_hash = db.Column(db.String(255), nullable=False)
+    # reader | admin
+    role = db.Column(db.String(16), nullable=False, default="reader")
     nickname = db.Column(db.String(100))
     preferred_src_lang = db.Column(db.String(10))
     preferred_tgt_lang = db.Column(db.String(10))
@@ -217,5 +219,59 @@ class ReaderFeedback(db.Model):
     )
     rating = db.Column(db.Integer)  # 1-5
     comment = db.Column(db.String(1024))
+    created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+
+
+class EvaluationTask(db.Model):
+    """管理员发起的评测任务。"""
+
+    __tablename__ = "evaluation_tasks"
+
+    id = db.Column(db.BigInteger, primary_key=True, autoincrement=True)
+    user_id = db.Column(db.BigInteger, db.ForeignKey("users.id"), nullable=False)
+    dataset_id = db.Column(db.BigInteger, db.ForeignKey("datasets.id"), nullable=False)
+    name = db.Column(db.String(255), nullable=False)
+    src_lang = db.Column(db.String(20), nullable=False)
+    tgt_lang = db.Column(db.String(20), nullable=False)
+    engine = db.Column(db.String(50), nullable=False, default="mock")
+    # 逗号分隔: BLEU,ROUGE,METEOR
+    metrics = db.Column(db.String(255), nullable=False, default="BLEU,ROUGE,METEOR")
+    sample_size = db.Column(db.Integer, nullable=False, default=30)
+    status = db.Column(db.String(20), nullable=False, default="done")
+    result_json = db.Column(db.Text)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+
+
+class DiscussionPost(db.Model):
+    """讨论区帖子。"""
+
+    __tablename__ = "discussion_posts"
+
+    id = db.Column(db.BigInteger, primary_key=True, autoincrement=True)
+    user_id = db.Column(db.BigInteger, db.ForeignKey("users.id"), nullable=False)
+    category = db.Column(db.String(32), nullable=False, default="翻译交流")
+    title = db.Column(db.String(255), nullable=False)
+    content = db.Column(db.Text, nullable=False)
+    summary = db.Column(db.String(512))
+    status = db.Column(db.String(20), nullable=False, default="published")  # published|hidden
+    is_pinned = db.Column(db.Boolean, default=False)
+    likes = db.Column(db.Integer, nullable=False, default=0)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+    updated_at = db.Column(
+        db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False
+    )
+
+
+class DiscussionComment(db.Model):
+    """讨论区评论（一级评论 + 回复）。"""
+
+    __tablename__ = "discussion_comments"
+
+    id = db.Column(db.BigInteger, primary_key=True, autoincrement=True)
+    post_id = db.Column(db.BigInteger, db.ForeignKey("discussion_posts.id"), nullable=False)
+    user_id = db.Column(db.BigInteger, db.ForeignKey("users.id"), nullable=False)
+    parent_id = db.Column(db.BigInteger, db.ForeignKey("discussion_comments.id"))
+    content = db.Column(db.String(2000), nullable=False)
+    likes = db.Column(db.Integer, nullable=False, default=0)
     created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
 

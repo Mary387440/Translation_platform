@@ -6,7 +6,9 @@ import os
 import zipfile
 
 from flask import Blueprint, current_app, jsonify, request
-from flask_jwt_extended import get_jwt_identity, jwt_required
+from flask_jwt_extended import get_jwt_identity
+
+from authz import admin_required
 from werkzeug.utils import secure_filename
 
 from app import db
@@ -51,7 +53,7 @@ def _safe_extract_path(base_dir, member_name):
 
 
 @bp.get("")
-@jwt_required()
+@admin_required
 def list_datasets():
     user_id = _uid()
     rows = (
@@ -67,6 +69,17 @@ def list_datasets():
                 stats = json.loads(r.stats_json)
             except json.JSONDecodeError:
                 pass
+        # 手动删库/补数据后，stats_json 可能过期；这里补充实时统计，保证前端显示正确。
+        if r.kind == "parallel":
+            stats["parallel_total_pairs"] = (
+                ParallelPair.query.filter_by(dataset_id=r.id).count()
+            )
+        elif r.kind == "terminology":
+            stats["terminology_total_entries"] = (
+                GlossaryEntry.query.filter_by(dataset_id=r.id).count()
+            )
+        elif r.kind == "document":
+            stats["document_total_docs"] = Doc.query.filter_by(dataset_id=r.id).count()
         out.append(
             {
                 "id": r.id,
@@ -83,7 +96,7 @@ def list_datasets():
 
 
 @bp.post("")
-@jwt_required()
+@admin_required
 def create_dataset():
     user_id = _uid()
     data = request.get_json() or {}
@@ -123,7 +136,7 @@ def create_dataset():
 
 
 @bp.get("/<int:dataset_id>")
-@jwt_required()
+@admin_required
 def get_dataset(dataset_id):
     user_id = _uid()
     ds, err = _dataset_or_404(dataset_id, user_id)
@@ -174,7 +187,7 @@ def _normalize_term_row(row):
 
 
 @bp.post("/<int:dataset_id>/import/terminology")
-@jwt_required()
+@admin_required
 def import_terminology(dataset_id):
     user_id = _uid()
     ds, err = _dataset_or_404(dataset_id, user_id, "terminology")
@@ -247,7 +260,7 @@ def import_terminology(dataset_id):
 
 
 @bp.post("/<int:dataset_id>/import/parallel")
-@jwt_required()
+@admin_required
 def import_parallel(dataset_id):
     user_id = _uid()
     ds, err = _dataset_or_404(dataset_id, user_id, "parallel")
@@ -366,7 +379,7 @@ def import_parallel(dataset_id):
 
 
 @bp.post("/<int:dataset_id>/import/documents")
-@jwt_required()
+@admin_required
 def import_documents(dataset_id):
     user_id = _uid()
     ds, err = _dataset_or_404(dataset_id, user_id, "document")
@@ -456,7 +469,7 @@ def import_documents(dataset_id):
 
 
 @bp.get("/<int:dataset_id>/parallel-pairs")
-@jwt_required()
+@admin_required
 def list_parallel_preview(dataset_id):
     """简易预览：前 N 条平行句。"""
     user_id = _uid()

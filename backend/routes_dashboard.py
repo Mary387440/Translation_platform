@@ -2,7 +2,9 @@
 from datetime import datetime, timedelta
 
 from flask import Blueprint, jsonify
-from flask_jwt_extended import get_jwt_identity, jwt_required
+from flask_jwt_extended import get_jwt_identity
+
+from authz import admin_required
 from app import db
 from models import AIUsageLog, Doc, GlossaryEntry, LiteraryWork
 
@@ -14,7 +16,7 @@ def _uid():
 
 
 @bp.get("/summary")
-@jwt_required()
+@admin_required
 def summary():
     user_id = _uid()
     since = datetime.utcnow() - timedelta(days=7)

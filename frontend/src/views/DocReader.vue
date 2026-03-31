@@ -6,7 +6,7 @@
       show-icon
       style="margin-bottom: 16px"
     >
-      <router-link to="/works">前往书库</router-link>
+      <router-link to="/books">读者书库</router-link>
     </el-alert>
     <div class="page-header">
       <div>

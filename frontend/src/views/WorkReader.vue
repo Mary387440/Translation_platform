@@ -2,7 +2,7 @@
   <div class="page reader-page">
     <div class="page-header">
       <div>
-        <el-button link type="primary" @click="$router.push('/works')">← 返回书库</el-button>
+        <el-button link type="primary" @click="goBack">← {{ isReader ? '返回书库' : '返回书稿' }}</el-button>
         <h1 class="page-title">{{ work?.title || '阅读' }}</h1>
         <p class="page-subtitle">{{ work?.author_name }} · {{ chapterTitle }}</p>
       </div>
@@ -35,7 +35,7 @@
               AI 翻译
             </el-button>
             <el-button
-              v-if="row.translation"
+              v-if="row.translation && !isReader"
               size="small"
               @click="openPolish(row)"
             >
@@ -54,6 +54,27 @@
             引擎 {{ row.translation.engine }} ·
             {{ row.translation.status === 'human_polished' ? '已润色' : 'AI 草稿' }}
           </div>
+
+          <el-collapse
+            v-if="row.translation && row.translation.rag && (row.translation.rag.glossary_block || row.translation.rag.parallel_block)"
+            class="rag-collapse"
+          >
+            <el-collapse-item name="rag">
+              <template #title>
+                翻译依据（术语/平行句）
+              </template>
+              <div class="rag-box">
+                <div v-if="row.translation.rag.glossary_block" class="rag-section">
+                  <div class="rag-title">术语命中</div>
+                  <pre class="rag-pre">{{ row.translation.rag.glossary_block }}</pre>
+                </div>
+                <div v-if="row.translation.rag.parallel_block" class="rag-section">
+                  <div class="rag-title">平行句参考</div>
+                  <pre class="rag-pre">{{ row.translation.rag.parallel_block }}</pre>
+                </div>
+              </div>
+            </el-collapse-item>
+          </el-collapse>
         </el-card>
       </div>
     </div>
@@ -79,13 +100,20 @@
 
 <script setup>
 import { computed, onMounted, ref } from 'vue'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { api } from '../stores/auth'
 
 const route = useRoute()
+const router = useRouter()
 const workId = computed(() => route.params.workId)
 const chapterId = computed(() => route.params.chapterId)
+const isReader = computed(() => route.meta.mode === 'reader')
+const apiBase = computed(() => (isReader.value ? '/api/catalog' : '/api/works'))
+
+const goBack = () => {
+  router.push(isReader.value ? '/books' : '/admin/works')
+}
 
 const work = ref(null)
 const chapterTitle = ref('')
@@ -104,13 +132,13 @@ const fbComment = ref('')
 const fbTarget = ref(null)
 
 const loadWork = async () => {
-  const { data } = await api.get(`/api/works/${workId.value}`)
+  const { data } = await api.get(`${apiBase.value}/works/${workId.value}`)
   work.value = data
 }
 
 const reloadSegments = async () => {
   const { data } = await api.get(
-    `/api/works/${workId.value}/chapters/${chapterId.value}/segments`,
+    `${apiBase.value}/works/${workId.value}/chapters/${chapterId.value}/segments`,
     { params: { target_lang: targetLang.value } },
   )
   segments.value = (data.items || []).map((s) => ({ ...s, _loading: false }))
@@ -125,7 +153,7 @@ onMounted(async () => {
       /* 未登录等 */
     }
     await loadWork()
-    const { data: ch } = await api.get(`/api/works/${workId.value}/chapters`)
+    const { data: ch } = await api.get(`${apiBase.value}/works/${workId.value}/chapters`)
     const cur = ch.items?.find((c) => String(c.id) === String(chapterId.value))
     chapterTitle.value = cur?.title || ''
     await reloadSegments()
@@ -139,12 +167,19 @@ onMounted(async () => {
 const doTranslate = async (row) => {
   row._loading = true
   try {
-    await api.post(`/api/works/segments/${row.id}/translate`, {
+    const { data } = await api.post(`${apiBase.value}/segments/${row.id}/translate`, {
       target_lang: targetLang.value,
       use_rag: useRag.value,
     })
+    // 直接更新当前卡片，保证“翻译依据”不会因 reload 而丢失
+    row.translation = {
+      id: data.translation_id,
+      text: data.translated_text,
+      status: data.status,
+      engine: data.engine,
+      rag: data.rag || { glossary_block: '', parallel_block: '' },
+    }
     ElMessage.success('已生成译文')
-    await reloadSegments()
   } catch (e) {
     ElMessage.error(e?.response?.data?.message || '翻译失败')
   } finally {
@@ -182,7 +217,7 @@ const openFeedback = (row) => {
 const sendFeedback = async () => {
   if (!fbTarget.value?.translation) return
   try {
-    await api.post(`/api/works/translations/${fbTarget.value.translation.id}/feedback`, {
+    await api.post(`${apiBase.value}/translations/${fbTarget.value.translation.id}/feedback`, {
       rating: fbRating.value,
       comment: fbComment.value,
     })
@@ -246,5 +281,34 @@ const sendFeedback = async () => {
 }
 .tgt-card {
   border-left: 3px solid #3b82f6;
+}
+
+.rag-collapse {
+  margin-top: 10px;
+}
+
+.rag-box {
+  padding: 0 8px 6px;
+}
+
+.rag-section + .rag-section {
+  margin-top: 10px;
+}
+
+.rag-title {
+  font-size: 12px;
+  color: #6b7280;
+  margin: 6px 0;
+  font-weight: 600;
+}
+
+.rag-pre {
+  margin: 0;
+  white-space: pre-wrap;
+  word-break: break-word;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono',
+    'Courier New', monospace;
+  font-size: 12px;
+  line-height: 1.55;
 }
 </style>

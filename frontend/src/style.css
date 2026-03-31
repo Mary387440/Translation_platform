@@ -9,9 +9,12 @@ body {
   margin: 0;
   padding: 0;
   height: 100%;
-  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-  color: #1f2933;
-  background-color: #f5f7fb;
+  font-family: "Source Han Sans SC", "Segoe UI", system-ui, sans-serif;
+  color: #f8f5ff;
+  background:
+    radial-gradient(1000px 600px at 0% 0%, rgba(255, 56, 186, 0.22), transparent 50%),
+    radial-gradient(900px 620px at 100% 10%, rgba(146, 84, 255, 0.26), transparent 58%),
+    linear-gradient(145deg, #130824 0%, #1e1340 40%, #23194d 70%, #38134a 100%);
 }
 
 #app {
@@ -19,9 +22,10 @@ body {
 }
 
 .el-aside {
-  background: #101827;
-  color: #e5e7eb;
-  border-right: 1px solid rgba(255, 255, 255, 0.06);
+  background: linear-gradient(180deg, rgba(45, 20, 74, 0.88), rgba(20, 15, 48, 0.92));
+  color: #ece7ff;
+  border-right: 1px solid rgba(235, 188, 255, 0.2);
+  backdrop-filter: blur(16px);
 }
 
 .el-menu {
@@ -30,12 +34,22 @@ body {
 }
 
 .el-menu-item {
-  color: #9ca3af;
+  color: #d8cdf7;
+  border-radius: 12px;
+  margin: 4px 8px;
+  transition: all 0.2s ease;
+}
+
+.el-menu-item:hover {
+  color: #fff;
+  background: rgba(235, 76, 255, 0.16);
+  box-shadow: 0 0 20px rgba(255, 93, 212, 0.22);
 }
 
 .el-menu-item.is-active {
-  background-color: rgba(59, 130, 246, 0.16);
-  color: #ffffff;
+  background: linear-gradient(135deg, rgba(229, 70, 255, 0.72), rgba(122, 88, 255, 0.7));
+  color: #fff;
+  box-shadow: 0 8px 24px rgba(204, 91, 255, 0.34);
 }
 
 .el-header {
@@ -43,21 +57,23 @@ body {
   align-items: center;
   justify-content: space-between;
   padding: 0 24px;
-  border-bottom: 1px solid #e5e7eb;
-  background: #ffffff;
+  border-bottom: 1px solid rgba(255, 199, 255, 0.24);
+  background: linear-gradient(90deg, rgba(44, 20, 84, 0.75), rgba(72, 30, 108, 0.62));
+  backdrop-filter: blur(14px);
 }
 
 .app-title {
   font-size: 18px;
-  font-weight: 600;
+  font-weight: 700;
   display: flex;
   align-items: center;
   gap: 8px;
+  color: #fff;
 }
 
 .app-subtitle {
   font-size: 12px;
-  color: #6b7280;
+  color: #d8c7ff;
 }
 
 .app-header-right {
@@ -84,15 +100,17 @@ body {
 }
 
 .page-title {
-  font-size: 20px;
-  font-weight: 600;
+  font-size: 28px;
+  font-weight: 800;
   margin: 0;
+  color: #fff;
+  letter-spacing: 0.5px;
 }
 
 .page-subtitle {
   margin: 4px 0 0;
   font-size: 13px;
-  color: #6b7280;
+  color: #d8c6f8;
 }
 
 .page-actions {
@@ -116,4 +134,59 @@ body {
   .two-column {
     grid-template-columns: 1fr;
   }
+}
+
+.el-main {
+  background: transparent;
+}
+
+.el-card {
+  background: linear-gradient(160deg, rgba(41, 22, 70, 0.62), rgba(38, 28, 78, 0.44));
+  border: 1px solid rgba(225, 154, 255, 0.2);
+  border-radius: 16px;
+  color: #f8f5ff;
+  box-shadow: 0 10px 40px rgba(9, 4, 24, 0.36);
+  backdrop-filter: blur(10px);
+}
+
+.el-input__wrapper,
+.el-textarea__inner,
+.el-select__wrapper {
+  background: rgba(255, 255, 255, 0.08) !important;
+  box-shadow: inset 0 0 0 1px rgba(236, 170, 255, 0.26) !important;
+  color: #fff !important;
+}
+
+.el-input__inner,
+.el-textarea__inner,
+.el-select__selected-item {
+  color: #fff !important;
+}
+
+.el-input__inner::placeholder,
+.el-textarea__inner::placeholder {
+  color: #d2c4eb !important;
+}
+
+.el-button--primary {
+  border: none;
+  background: linear-gradient(135deg, #ff4fd8, #a559ff);
+  box-shadow: 0 8px 20px rgba(255, 94, 212, 0.32);
+}
+
+.el-button--primary:hover {
+  transform: translateY(-1px) scale(1.01);
+  box-shadow: 0 10px 24px rgba(255, 94, 212, 0.45);
+}
+
+.el-button:not(.el-button--primary) {
+  border-color: rgba(238, 193, 255, 0.34);
+  background: rgba(255, 255, 255, 0.06);
+  color: #f6efff;
+}
+
+.el-tag {
+  border: none;
+  color: #fff;
+  background: linear-gradient(135deg, rgba(253, 109, 247, 0.78), rgba(112, 123, 255, 0.72));
 }
