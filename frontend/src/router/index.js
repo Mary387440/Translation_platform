@@ -19,6 +19,7 @@ const Settings = () => import('../views/Settings.vue')
 const Discussion = () => import('../views/Discussion.vue')
 const DiscussionDetail = () => import('../views/DiscussionDetail.vue')
 const AdminDiscussionManage = () => import('../views/admin/DiscussionManage.vue')
+const Home = () => import('../views/Home.vue')
 
 const routes = [
   {
@@ -32,7 +33,8 @@ const routes = [
     component: ReaderLayout,
     meta: { requiresAuth: true },
     children: [
-      { path: '', redirect: '/books' },
+      { path: '', redirect: '/home' },
+      { path: 'home', name: 'Home', component: Home },
       { path: 'books', name: 'BookStore', component: BookStore },
       {
         path: 'books/:workId/chapter/:chapterId',

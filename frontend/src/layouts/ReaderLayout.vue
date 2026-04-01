@@ -3,6 +3,9 @@
     <el-aside width="200px">
       <div class="brand reader-brand">SailoAI</div>
       <el-menu router :default-active="activePath">
+        <el-menu-item index="/home">
+          <span>首页</span>
+        </el-menu-item>
         <el-menu-item index="/books">
           <span>书库</span>
         </el-menu-item>
@@ -52,6 +55,7 @@ const user = computed(() => auth.user)
 const isAdmin = computed(() => auth.user?.role === 'admin')
 const activePath = computed(() => {
   const p = route.path
+  if (p.startsWith('/home')) return '/home'
   if (p.startsWith('/books')) return '/books'
   if (p.startsWith('/favorites')) return '/favorites'
   if (p.startsWith('/settings')) return '/settings'
