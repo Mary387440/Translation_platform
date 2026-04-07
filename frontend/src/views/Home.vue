@@ -102,7 +102,7 @@
         <div class="feature-card" @click="$router.push('/books')">
           <div class="icon">✨</div>
           <div class="name">AI 智能翻译润色</div>
-          <div class="desc">支持 RAG 依据展示，翻译更透明。</div>
+          <div class="desc">支持 RAG 依据查看，翻译更透明。</div>
         </div>
         <div class="feature-card" @click="$router.push('/discussions')">
           <div class="icon">💬</div>

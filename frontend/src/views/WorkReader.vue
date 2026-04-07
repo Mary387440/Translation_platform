@@ -14,6 +14,7 @@
           <el-option label="Español" value="es" />
           <el-option label="Français" value="fr" />
           <el-option label="Deutsch" value="de" />
+          <el-option label="ไทย" value="th" />
         </el-select>
         <el-switch v-model="useRag" active-text="RAG" />
       </div>
@@ -152,6 +153,8 @@ onMounted(async () => {
     } catch {
       /* 未登录等 */
     }
+    // 路由 query 优先（用于演示：点开即对比）
+    if (route.query?.target_lang) targetLang.value = String(route.query.target_lang)
     await loadWork()
     const { data: ch } = await api.get(`${apiBase.value}/works/${workId.value}/chapters`)
     const cur = ch.items?.find((c) => String(c.id) === String(chapterId.value))
@@ -167,6 +170,15 @@ onMounted(async () => {
 const doTranslate = async (row) => {
   row._loading = true
   try {
+    // 读者模式：若当前是 AI 草稿，再点一次 AI 翻译则回退到初始译文
+    if (isReader.value && row.translation && row.translation.status === 'ai_draft') {
+      await api.delete(`${apiBase.value}/segments/${row.id}/my-translation`, {
+        params: { target_lang: targetLang.value },
+      })
+      await reloadSegments()
+      ElMessage.success('已恢复到之前译文')
+      return
+    }
     const { data } = await api.post(`${apiBase.value}/segments/${row.id}/translate`, {
       target_lang: targetLang.value,
       use_rag: useRag.value,

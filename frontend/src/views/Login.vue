@@ -85,13 +85,16 @@ const regForm = reactive({
 
 const afterAuthRedirect = () => {
   const redirect = route.query.redirect
-  if (redirect && typeof redirect === 'string') {
-    router.push(redirect)
-  } else if (auth.user?.role === 'admin') {
-    router.push('/admin/dashboard')
-  } else {
-    router.push('/books')
+  // 防止错误 redirect 把用户再次留在登录页
+  if (redirect && typeof redirect === 'string' && !redirect.startsWith('/login')) {
+    router.replace(redirect)
+    return
   }
+  if (auth.user?.role === 'admin') {
+    router.replace('/admin/dashboard')
+    return
+  }
+  router.replace('/books')
 }
 
 const onLogin = async () => {

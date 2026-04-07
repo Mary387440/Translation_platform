@@ -30,7 +30,7 @@
       <el-card>
         <template #header>原文</template>
         <p style="color: #9ca3af; font-size: 13px">
-          这里将按句/段落展示原文内容，可点击逐句翻译。
+          这里将按句/段落呈现原文内容，可点击逐句翻译。
         </p>
       </el-card>
       <el-card>

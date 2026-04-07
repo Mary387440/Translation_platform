@@ -37,7 +37,7 @@
       </el-table>
 
       <div style="margin-top: 12px; text-align: center; color: #9ca3af; font-size: 13px">
-        暂无数据，后端接入后将展示真实文档列表。
+        暂无数据，后端接入后将提供真实文档列表。
       </div>
     </el-card>
   </div>
